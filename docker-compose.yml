@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # Inventory DB
+  inventory_db:
+    image: postgres:15
+    container_name: inventory_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: inventorydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - inventory_data:/var/lib/postgresql/data
+
+  # Inventory Service
+  inventory_service:
+    build: ./inventory-service
+    container_name: inventory_service
+    environment:
+      POSTGRES_DSN: "postgres://postgres:admin@inventory_db:5432/inventorydb?sslmode=disable"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - inventory_db
+
+  # Order DB
+  order_db:
+    image: postgres:15
+    container_name: order_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: orderdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - order_data:/var/lib/postgresql/data
+
+  # Order Service
+  order_service:
+    build: ./order-service
+    container_name: order_service
+    environment:
+      POSTGRES_DSN: "postgres://postgres:admin@order_db:5432/orderdb?sslmode=disable"
+    ports:
+      - "8082:8082"
+    depends_on:
+      - order_db
+      - inventory_service
+
+  api_gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - inventory_service
+      - order_service
+
+
+volumes:
+  inventory_data:
+  order_data:
