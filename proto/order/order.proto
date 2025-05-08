@@ -1,0 +1,34 @@
+// order.proto
+
+syntax = "proto3";
+
+package order;
+
+service OrderService {
+  rpc CreateOrder (OrderRequest) returns (OrderResponse);
+  rpc GetOrder (OrderID) returns (OrderResponse);
+  rpc CancelOrder (OrderID) returns (CancelResponse);
+}
+
+message OrderRequest {
+  string id = 1;
+  string product_id = 2;
+  int32 quantity = 3;
+  string user_id = 4;
+}
+
+message OrderResponse {
+  string id = 1;
+  string product_id = 2;
+  int32 quantity = 3;
+  string user_id = 4;
+  string status = 5;
+}
+
+message OrderID {
+  string id = 1;
+}
+
+message CancelResponse {
+  bool success = 1;
+}

@@ -1,0 +1,36 @@
+// inventory.proto
+
+syntax = "proto3";
+
+package inventory;
+
+service InventoryService {
+  rpc CreateProduct (ProductRequest) returns (ProductResponse);
+  rpc GetProduct (ProductID) returns (ProductResponse);
+  rpc UpdateProduct (ProductRequest) returns (ProductResponse);
+  rpc DeleteProduct (ProductID) returns (DeleteResponse);
+}
+
+message ProductRequest {
+  string id = 1;
+  string name = 2;
+  string category = 3;
+  int32 quantity = 4;
+  float price = 5;
+}
+
+message ProductResponse {
+  string id = 1;
+  string name = 2;
+  string category = 3;
+  int32 quantity = 4;
+  float price = 5;
+}
+
+message ProductID {
+  string id = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+}
