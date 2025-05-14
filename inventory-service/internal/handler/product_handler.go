@@ -23,7 +23,7 @@ func (h *ProductHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.usecase.Create(product); err != nil {
+	if err := h.usecase.Create(&product); err != nil {
 		fmt.Println("❌ Error creating product:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -59,7 +59,7 @@ func (h *ProductHandler) Update(c *gin.Context) {
 		return
 	}
 	product.ID = id
-	if err := h.usecase.Update(product); err != nil {
+	if err := h.usecase.Update(&product); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
 		return
 	}

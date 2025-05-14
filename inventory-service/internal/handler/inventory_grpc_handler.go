@@ -26,6 +26,7 @@ func (h *InventoryGRPCHandler) CreateProduct(ctx context.Context, req *inventory
 	}
 
 	err := h.ProductUC.Create(product)
+
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +43,7 @@ func (h *InventoryGRPCHandler) GetProductByID(ctx context.Context, req *inventor
 		Id:       product.ID,
 		Name:     product.Name,
 		Category: product.Category,
-		Price:    product.Price,
+		Price:    float32(product.Price),
 		Stock:    product.Stock,
 	}, nil
 }
@@ -59,7 +60,7 @@ func (h *InventoryGRPCHandler) ListProducts(ctx context.Context, _ *inventorypb.
 			Id:       p.ID,
 			Name:     p.Name,
 			Category: p.Category,
-			Price:    p.Price,
+			Price:    float32(p.Price),
 			Stock:    p.Stock,
 		})
 	}
@@ -72,10 +73,11 @@ func (h *InventoryGRPCHandler) UpdateProduct(ctx context.Context, req *inventory
 		ID:       req.Id,
 		Name:     req.Name,
 		Category: req.Category,
-		Price:    req.Price,
+		Price:    float64(req.Price),
 		Stock:    req.Stock,
 	}
 	err := h.ProductUC.Update(product)
+
 	if err != nil {
 		return nil, err
 	}
