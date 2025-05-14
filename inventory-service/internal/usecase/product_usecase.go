@@ -7,25 +7,26 @@ import (
 
 type ProductUsecase interface {
 	Create(product model.Product) error
-	GetByID(id int) (*model.Product, error)
+	GetByID(id string) (*model.Product, error)
 	GetAll() ([]model.Product, error)
 	Update(product model.Product) error
-	Delete(id int) error
+	Delete(id string) error
 }
 
+// Define the struct (lowercase)
 type productUsecase struct {
 	repo repository.ProductRepository
 }
 
 func NewProductUsecase(r repository.ProductRepository) ProductUsecase {
-	return &productUsecase{r}
+	return &productUsecase{repo: r}
 }
 
 func (u *productUsecase) Create(product model.Product) error {
 	return u.repo.Create(product)
 }
 
-func (u *productUsecase) GetByID(id int) (*model.Product, error) {
+func (u *productUsecase) GetByID(id string) (*model.Product, error) {
 	return u.repo.GetByID(id)
 }
 
@@ -37,6 +38,6 @@ func (u *productUsecase) Update(product model.Product) error {
 	return u.repo.Update(product)
 }
 
-func (u *productUsecase) Delete(id int) error {
+func (u *productUsecase) Delete(id string) error {
 	return u.repo.Delete(id)
 }

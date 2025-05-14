@@ -2,35 +2,50 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
+	"net"
+
 	"inventory/config"
 	"inventory/internal/handler"
 	"inventory/internal/repository"
 	"inventory/internal/usecase"
 
-	"github.com/gin-gonic/gin"
+	inventorypb "inventory/proto/inventorypb"
+
 	_ "github.com/lib/pq"
+	"google.golang.org/grpc"
 )
 
 func main() {
+	// Connect to PostgreSQL
 	db, err := sql.Open("postgres", config.GetDBConnectionString())
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to connect to DB: %v", err)
 	}
 	defer db.Close()
 
-	categoryRepo := repository.NewCategoryRepository(db)
-	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
-	categoryHandler := handler.NewCategoryHandler(categoryUsecase)
+	// Set up Repositories and Usecases
+	productRepo := repository.NewProductRepository(db)
+	productUsecase := usecase.NewProductUsecase(productRepo)
 
-	repo := repository.NewProductRepository(db)
-	usecase := usecase.NewProductUsecase(repo)
-	handler := handler.NewProductHandler(usecase)
+	// categoryRepo := repository.NewCategoryRepository(db)
+	// categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
 
-	router := gin.Default()
-	categoryHandler.RegisterRoutes(router)
-	handler.RegisterRoutes(router)
+	// Set up gRPC Handlers
+	productGRPCHandler := handler.NewInventoryGRPCHandler(productUsecase)
+	// categoryGRPCHandler := handler.NewCategoryGRPCHandler(categoryUsecase) // Optional if implementing
 
-	fmt.Println("🚀 Inventory service running on :8081")
-	router.Run(":8081")
+	// Start gRPC server
+	listener, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("Failed to listen on port 50051: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	inventorypb.RegisterInventoryServiceServer(grpcServer, productGRPCHandler)
+
+	log.Println("🚀 InventoryService gRPC running on :50051")
+	if err := grpcServer.Serve(listener); err != nil {
+		log.Fatalf("Failed to serve gRPC: %v", err)
+	}
 }

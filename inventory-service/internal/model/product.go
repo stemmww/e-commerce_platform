@@ -1,10 +1,10 @@
 package model
 
 type Product struct {
-	ID          int     `json:"id"`
+	ID          string  `json:"id"` // changed from int to string
 	Name        string  `json:"name"`
-	CategoryID  int     `json:"category_id"`
+	Category    string  `json:"category"` // changed from CategoryID int to Category string
 	Price       float64 `json:"price"`
-	Stock       int     `json:"stock"`
+	Stock       int32   `json:"stock"` // changed from int to int32
 	Description string  `json:"description"`
 }

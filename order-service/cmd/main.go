@@ -2,45 +2,56 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
+	"net"
 	"order-service/internal/handler"
 	"order-service/internal/inventory"
 	"order-service/internal/repository"
 	"order-service/internal/usecase"
+	orderpb "order-service/proto/orderpb"
 	"os"
 
-	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	"google.golang.org/grpc"
 )
 
 func main() {
-	// Database connection
+	// Connect to PostgreSQL
 	db, err := sql.Open("postgres", getDSN())
 	if err != nil {
-		log.Fatal("❌ Failed to connect to database:", err)
+		log.Fatalf("❌ Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
-	// Initialize layers
+	// Setup Repository and Inventory gRPC Client
 	orderRepo := repository.NewOrderRepository(db)
-	orderUsecase := usecase.NewOrderUsecase(orderRepo)
+	invClient := inventory.NewInventoryClient("localhost:50051") // InventoryService gRPC address
 
-	inventoryClient := inventory.NewInventoryClient("http://inventory_service:8081") // replace with service name if needed
-	orderHandler := handler.NewOrderHandler(orderUsecase, inventoryClient)
+	// Usecase with inventory dependency
+	orderUsecase := usecase.NewOrderUsecase(orderRepo, invClient)
 
-	// Router
-	router := gin.Default()
-	handler.RegisterOrderRoutes(router, orderHandler)
+	// Setup gRPC Handler
+	orderGRPCHandler := handler.NewOrderGRPCHandler(orderUsecase)
 
-	fmt.Println("🚀 Order service running on :8082")
-	router.Run(":8082")
+	// gRPC Server
+	lis, err := net.Listen("tcp", ":50052")
+	if err != nil {
+		log.Fatalf("❌ Failed to listen on :50052: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	orderpb.RegisterOrderServiceServer(grpcServer, orderGRPCHandler)
+
+	log.Println("🚀 OrderService gRPC running on :50052")
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("❌ Failed to serve: %v", err)
+	}
 }
 
+// getDSN reads DB connection string from env or uses default fallback
 func getDSN() string {
 	dsn := os.Getenv("POSTGRES_DSN")
 	if dsn == "" {
-		// fallback/default
 		dsn = "postgres://postgres:admin@localhost:5432/orderdb?sslmode=disable"
 	}
 	return dsn

@@ -40,28 +40,29 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	product, err := h.inventoryClient.GetProduct(req.ProductID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Product not found"})
-		return
-	}
+	for _, item := range req.OrderItems {
+		product, err := h.inventoryClient.GetProduct(strconv.Itoa(item.ProductID))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Product not found"})
+			return
+		}
 
-	if product.Stock < req.Quantity {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Not enough stock"})
-		return
-	}
+		if product.Stock < int32(item.Quantity) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Not enough stock for product " + strconv.Itoa(item.ProductID)})
+			return
+		}
 
-	newStock := product.Stock - req.Quantity
-	err = h.inventoryClient.UpdateStock(req.ProductID, newStock)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update stock"})
-		return
+		newStock := product.Stock - int32(item.Quantity)
+		err = h.inventoryClient.UpdateStock(strconv.Itoa(item.ProductID), newStock)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update stock"})
+			return
+		}
 	}
 
 	req.Status = "pending"
 
-	err = h.orderUsecase.CreateOrder(&req)
-	if err != nil {
+	if err := h.orderUsecase.CreateOrder(&req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create order"})
 		return
 	}

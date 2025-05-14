@@ -5,7 +5,6 @@ import (
 	"inventory/internal/model"
 	"inventory/internal/usecase"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,7 +33,7 @@ func (h *ProductHandler) Create(c *gin.Context) {
 }
 
 func (h *ProductHandler) GetByID(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id := c.Param("id")
 	product, err := h.usecase.GetByID(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
@@ -53,7 +52,7 @@ func (h *ProductHandler) GetAll(c *gin.Context) {
 }
 
 func (h *ProductHandler) Update(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id := c.Param("id")
 	var product model.Product
 	if err := c.ShouldBindJSON(&product); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -68,7 +67,7 @@ func (h *ProductHandler) Update(c *gin.Context) {
 }
 
 func (h *ProductHandler) Delete(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id := c.Param("id")
 	if err := h.usecase.Delete(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete product"})
 		return
