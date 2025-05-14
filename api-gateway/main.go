@@ -2,14 +2,21 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"time"
+
+	inventorypb "api-gateway/proto/inventorypb"
+	userpb "api-gateway/proto/userpb"
 
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc"
 )
 
 func reverseProxy(target string) gin.HandlerFunc {
@@ -29,6 +36,87 @@ func reverseProxy(target string) gin.HandlerFunc {
 
 func main() {
 	router := gin.Default()
+
+	// Connect to User Service
+	userConn, err := grpc.Dial("localhost:50053", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to connect to User Service: %v", err)
+	}
+	defer userConn.Close()
+	userClient := userpb.NewUserServiceClient(userConn)
+
+	// Connect to Inventory Service
+	invConn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to connect to Inventory Service: %v", err)
+	}
+	defer invConn.Close()
+	invClient := inventorypb.NewInventoryServiceClient(invConn)
+
+	// USER ROUTES
+	router.POST("/users/register", func(c *gin.Context) {
+		var req userpb.UserRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := userClient.RegisterUser(ctx, &req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusCreated, res)
+	})
+
+	router.POST("/users/login", func(c *gin.Context) {
+		var req userpb.AuthRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := userClient.AuthenticateUser(ctx, &req)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, res)
+	})
+
+	router.GET("/users/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := userClient.GetUserProfile(ctx, &userpb.UserID{Id: id})
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, res)
+	})
+
+	// Optional health check
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+	router.GET("/grpc-products", func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		resp, err := invClient.ListProducts(ctx, &inventorypb.Empty{})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, resp)
+	})
 
 	router.GET("/products", func(c *gin.Context) {
 		resp, err := http.Get("http://inventory_service:8081/products")
