@@ -4,6 +4,7 @@ package order;
 
 option go_package = "proto/orderpb";
 
+// gRPC Service Definition
 service OrderService {
   rpc CreateOrder(Order) returns (OrderResponse);
   rpc GetOrderById(OrderID) returns (Order);
@@ -12,6 +13,7 @@ service OrderService {
   rpc DeleteOrder(OrderID) returns (OrderResponse);
 }
 
+// Core Order message
 message Order {
   string id = 1;
   string user_id = 2;
@@ -20,26 +22,32 @@ message Order {
   string status = 5;
 }
 
+// Each item in the order
 message OrderItem {
   string product_id = 1;
   int32 quantity = 2;
 }
 
+// Request to get/delete order by ID
 message OrderID {
   string id = 1;
 }
 
+// Response wrapper for Create/Update/Delete
 message OrderResponse {
   string message = 1;
 }
 
+// List of all orders
 message OrderList {
   repeated Order orders = 1;
 }
 
+// Used to update just the status of an order
 message OrderStatusUpdate {
   string id = 1;
   string status = 2;
 }
 
+// Empty message for list requests
 message Empty {}

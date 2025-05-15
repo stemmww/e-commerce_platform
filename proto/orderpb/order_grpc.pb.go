@@ -29,6 +29,8 @@ const (
 // OrderServiceClient is the client API for OrderService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// gRPC Service Definition
 type OrderServiceClient interface {
 	CreateOrder(ctx context.Context, in *Order, opts ...grpc.CallOption) (*OrderResponse, error)
 	GetOrderById(ctx context.Context, in *OrderID, opts ...grpc.CallOption) (*Order, error)
@@ -98,6 +100,8 @@ func (c *orderServiceClient) DeleteOrder(ctx context.Context, in *OrderID, opts 
 // OrderServiceServer is the server API for OrderService service.
 // All implementations must embed UnimplementedOrderServiceServer
 // for forward compatibility.
+//
+// gRPC Service Definition
 type OrderServiceServer interface {
 	CreateOrder(context.Context, *Order) (*OrderResponse, error)
 	GetOrderById(context.Context, *OrderID) (*Order, error)

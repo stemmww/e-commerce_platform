@@ -40,7 +40,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	for _, item := range req.OrderItems {
+	for _, item := range req.Items {
 		product, err := h.inventoryClient.GetProduct(strconv.Itoa(item.ProductID))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Product not found"})

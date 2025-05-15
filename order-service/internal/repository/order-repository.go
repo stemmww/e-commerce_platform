@@ -10,6 +10,7 @@ type OrderRepository interface {
 	GetAll() ([]model.Order, error)
 	GetByID(id int) (*model.Order, error)
 	UpdateStatus(id int, status string) error
+	Delete(id int) error
 }
 
 type orderRepository struct {
@@ -25,20 +26,19 @@ func (r *orderRepository) Create(order *model.Order) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
 
-	// Insert order
-	query := `INSERT INTO orders (user_id, total, status) VALUES ($1, $2, $3) RETURNING id`
-	err = tx.QueryRow(query, order.UserID, order.Total, order.Status).Scan(&order.ID)
+	_, err = tx.Exec(`INSERT INTO orders (id, user_id, total_price, status) VALUES ($1, $2, $3, $4)`,
+		order.ID, order.UserID, order.TotalPrice, order.Status)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
-	// Insert order items
-	for _, item := range order.OrderItems {
-		itemQuery := `INSERT INTO order_items (order_id, product_id, quantity) VALUES ($1, $2, $3)`
-		_, err := tx.Exec(itemQuery, order.ID, item.ProductID, item.Quantity)
+	for _, item := range order.Items {
+		_, err := tx.Exec(`INSERT INTO order_items (order_id, product_id, quantity) VALUES ($1, $2, $3)`,
+			order.ID, item.ProductID, item.Quantity)
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 	}
@@ -47,7 +47,8 @@ func (r *orderRepository) Create(order *model.Order) error {
 }
 
 func (r *orderRepository) GetAll() ([]model.Order, error) {
-	rows, err := r.db.Query(`SELECT id, user_id, total, status FROM orders`)
+	rows, err := r.db.Query(`SELECT id, user_id, total_price, status FROM orders`)
+
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +57,7 @@ func (r *orderRepository) GetAll() ([]model.Order, error) {
 	var orders []model.Order
 	for rows.Next() {
 		var o model.Order
-		if err := rows.Scan(&o.ID, &o.UserID, &o.Total, &o.Status); err != nil {
+		if err := rows.Scan(&o.ID, &o.UserID, &o.TotalPrice, &o.Status); err != nil {
 			return nil, err
 		}
 
@@ -76,16 +77,16 @@ func (r *orderRepository) GetAll() ([]model.Order, error) {
 			items = append(items, item)
 		}
 
-		o.OrderItems = items
+		o.Items = items
 		orders = append(orders, o)
 	}
 	return orders, nil
 }
 
 func (r *orderRepository) GetByID(id int) (*model.Order, error) {
-	row := r.db.QueryRow(`SELECT id, user_id, total, status FROM orders WHERE id = $1`, id)
+	row := r.db.QueryRow(`SELECT id, user_id, total_price, status FROM orders WHERE id = $1`, id)
 	var o model.Order
-	if err := row.Scan(&o.ID, &o.UserID, &o.Total, &o.Status); err != nil {
+	if err := row.Scan(&o.ID, &o.UserID, &o.TotalPrice, &o.Status); err != nil {
 		return nil, err
 	}
 
@@ -104,11 +105,34 @@ func (r *orderRepository) GetByID(id int) (*model.Order, error) {
 		items = append(items, item)
 	}
 
-	o.OrderItems = items
+	o.Items = items
 	return &o, nil
 }
 
 func (r *orderRepository) UpdateStatus(id int, status string) error {
 	_, err := r.db.Exec(`UPDATE orders SET status = $1 WHERE id = $2`, status, id)
 	return err
+}
+
+func (r *orderRepository) Delete(id int) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// First delete items
+	_, err = tx.Exec(`DELETE FROM order_items WHERE order_id = $1`, id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Then delete order
+	_, err = tx.Exec(`DELETE FROM orders WHERE id = $1`, id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }

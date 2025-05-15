@@ -3,9 +3,9 @@ package model
 type Order struct {
 	ID         int         `json:"id"`
 	UserID     int         `json:"user_id"`
-	Total      float64     `json:"total"`
+	TotalPrice float64     `json:"total_price"` // ✅ Match with proto
 	Status     string      `json:"status"`
-	OrderItems []OrderItem `json:"order_items"` // slice of related items
+	Items      []OrderItem `json:"items"` // ✅ Match with proto
 }
 
 type OrderItem struct {

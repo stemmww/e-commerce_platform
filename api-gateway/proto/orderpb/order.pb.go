@@ -21,6 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Core Order message
 type Order struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -97,6 +98,7 @@ func (x *Order) GetStatus() string {
 	return ""
 }
 
+// Each item in the order
 type OrderItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ProductId     string                 `protobuf:"bytes,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
@@ -149,6 +151,7 @@ func (x *OrderItem) GetQuantity() int32 {
 	return 0
 }
 
+// Request to get/delete order by ID
 type OrderID struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -193,6 +196,7 @@ func (x *OrderID) GetId() string {
 	return ""
 }
 
+// Response wrapper for Create/Update/Delete
 type OrderResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
@@ -237,6 +241,7 @@ func (x *OrderResponse) GetMessage() string {
 	return ""
 }
 
+// List of all orders
 type OrderList struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Orders        []*Order               `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"`
@@ -281,6 +286,7 @@ func (x *OrderList) GetOrders() []*Order {
 	return nil
 }
 
+// Used to update just the status of an order
 type OrderStatusUpdate struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -333,6 +339,7 @@ func (x *OrderStatusUpdate) GetStatus() string {
 	return ""
 }
 
+// Empty message for list requests
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -394,13 +401,14 @@ const file_proto_order_proto_rawDesc = "" +
 	"\x11OrderStatusUpdate\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\"\a\n" +
-	"\x05Empty2\xdd\x01\n" +
+	"\x05Empty2\x92\x02\n" +
 	"\fOrderService\x121\n" +
 	"\vCreateOrder\x12\f.order.Order\x1a\x14.order.OrderResponse\x12,\n" +
 	"\fGetOrderById\x12\x0e.order.OrderID\x1a\f.order.Order\x12,\n" +
 	"\n" +
 	"ListOrders\x12\f.order.Empty\x1a\x10.order.OrderList\x12>\n" +
-	"\fUpdateStatus\x12\x18.order.OrderStatusUpdate\x1a\x14.order.OrderResponseB\x0fZ\rproto/orderpbb\x06proto3"
+	"\fUpdateStatus\x12\x18.order.OrderStatusUpdate\x1a\x14.order.OrderResponse\x123\n" +
+	"\vDeleteOrder\x12\x0e.order.OrderID\x1a\x14.order.OrderResponseB\x0fZ\rproto/orderpbb\x06proto3"
 
 var (
 	file_proto_order_proto_rawDescOnce sync.Once
@@ -431,12 +439,14 @@ var file_proto_order_proto_depIdxs = []int32{
 	2, // 3: order.OrderService.GetOrderById:input_type -> order.OrderID
 	6, // 4: order.OrderService.ListOrders:input_type -> order.Empty
 	5, // 5: order.OrderService.UpdateStatus:input_type -> order.OrderStatusUpdate
-	3, // 6: order.OrderService.CreateOrder:output_type -> order.OrderResponse
-	0, // 7: order.OrderService.GetOrderById:output_type -> order.Order
-	4, // 8: order.OrderService.ListOrders:output_type -> order.OrderList
-	3, // 9: order.OrderService.UpdateStatus:output_type -> order.OrderResponse
-	6, // [6:10] is the sub-list for method output_type
-	2, // [2:6] is the sub-list for method input_type
+	2, // 6: order.OrderService.DeleteOrder:input_type -> order.OrderID
+	3, // 7: order.OrderService.CreateOrder:output_type -> order.OrderResponse
+	0, // 8: order.OrderService.GetOrderById:output_type -> order.Order
+	4, // 9: order.OrderService.ListOrders:output_type -> order.OrderList
+	3, // 10: order.OrderService.UpdateStatus:output_type -> order.OrderResponse
+	3, // 11: order.OrderService.DeleteOrder:output_type -> order.OrderResponse
+	7, // [7:12] is the sub-list for method output_type
+	2, // [2:7] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name

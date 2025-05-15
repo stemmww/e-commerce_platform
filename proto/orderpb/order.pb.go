@@ -21,6 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Core Order message
 type Order struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -97,6 +98,7 @@ func (x *Order) GetStatus() string {
 	return ""
 }
 
+// Each item in the order
 type OrderItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ProductId     string                 `protobuf:"bytes,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
@@ -149,6 +151,7 @@ func (x *OrderItem) GetQuantity() int32 {
 	return 0
 }
 
+// Request to get/delete order by ID
 type OrderID struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -193,6 +196,7 @@ func (x *OrderID) GetId() string {
 	return ""
 }
 
+// Response wrapper for Create/Update/Delete
 type OrderResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
@@ -237,6 +241,7 @@ func (x *OrderResponse) GetMessage() string {
 	return ""
 }
 
+// List of all orders
 type OrderList struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Orders        []*Order               `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"`
@@ -281,6 +286,7 @@ func (x *OrderList) GetOrders() []*Order {
 	return nil
 }
 
+// Used to update just the status of an order
 type OrderStatusUpdate struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -333,6 +339,7 @@ func (x *OrderStatusUpdate) GetStatus() string {
 	return ""
 }
 
+// Empty message for list requests
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields

@@ -207,7 +207,6 @@ func main() {
 
 	router.PATCH("/orders/:id", func(c *gin.Context) {
 		id := c.Param("id")
-
 		var payload struct {
 			Status string `json:"status"`
 		}
@@ -229,6 +228,21 @@ func main() {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "Order status updated"})
+	})
+
+	router.DELETE("/orders/:id", func(c *gin.Context) {
+		id := c.Param("id")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		_, err := orderClient.DeleteOrder(ctx, &orderpb.OrderID{Id: id})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Order deleted"})
 	})
 
 	router.POST("/products", func(c *gin.Context) {
