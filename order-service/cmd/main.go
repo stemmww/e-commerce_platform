@@ -25,7 +25,7 @@ func main() {
 
 	// Setup Repository and Inventory gRPC Client
 	orderRepo := repository.NewOrderRepository(db)
-	invClient := inventory.NewInventoryClient("localhost:50051") // InventoryService gRPC address
+	invClient := inventory.NewInventoryClient("inventory_service:50051") // InventoryService gRPC address
 
 	// Usecase with inventory dependency
 	orderUsecase := usecase.NewOrderUsecase(orderRepo, invClient)

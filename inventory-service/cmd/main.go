@@ -28,12 +28,12 @@ func main() {
 	productRepo := repository.NewProductRepository(db)
 	productUsecase := usecase.NewProductUsecase(productRepo)
 
-	// categoryRepo := repository.NewCategoryRepository(db)
-	// categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
+	categoryRepo := repository.NewCategoryRepository(db)
+	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
 
 	// Set up gRPC Handlers
-	productGRPCHandler := handler.NewInventoryGRPCHandler(productUsecase)
-	// categoryGRPCHandler := handler.NewCategoryGRPCHandler(categoryUsecase) // Optional if implementing
+
+	productGRPCHandler := handler.NewInventoryGRPCHandler(productUsecase, categoryUsecase)
 
 	// Start gRPC server
 	listener, err := net.Listen("tcp", ":50051")

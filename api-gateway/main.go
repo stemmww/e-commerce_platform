@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	inventorypb "api-gateway/proto/inventorypb"
+	orderpb "api-gateway/proto/orderpb"
 	userpb "api-gateway/proto/userpb"
 
 	"github.com/gin-gonic/gin"
@@ -38,7 +39,7 @@ func main() {
 	router := gin.Default()
 
 	// Connect to User Service
-	userConn, err := grpc.Dial("localhost:50053", grpc.WithInsecure())
+	userConn, err := grpc.Dial("user_service:50053", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to User Service: %v", err)
 	}
@@ -46,14 +47,21 @@ func main() {
 	userClient := userpb.NewUserServiceClient(userConn)
 
 	// Connect to Inventory Service
-	invConn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	invConn, err := grpc.Dial("inventory_service:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to Inventory Service: %v", err)
 	}
 	defer invConn.Close()
 	invClient := inventorypb.NewInventoryServiceClient(invConn)
 
-	// USER ROUTES
+	orderConn, err := grpc.Dial("order_service:50052", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to connect to Order Service: %v", err)
+	}
+	defer orderConn.Close()
+	orderClient := orderpb.NewOrderServiceClient(orderConn)
+
+	// USER ROUTES ------------------------------------------------------------------
 	router.POST("/users/register", func(c *gin.Context) {
 		var req userpb.UserRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -105,6 +113,10 @@ func main() {
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+
+	//SER ROUTES ENDING ------------------------------------------------------------------
+
+	// REPLACING HTTP ROUTES WITH GRPC ----------------------------------------------------------------
 	router.GET("/grpc-products", func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -119,158 +131,262 @@ func main() {
 	})
 
 	router.GET("/products", func(c *gin.Context) {
-		resp, err := http.Get("http://inventory_service:8081/products")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := invClient.ListProducts(ctx, &inventorypb.Empty{})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to reach inventory"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		defer resp.Body.Close()
 
-		c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("Content-Type"), resp.Body, nil)
+		c.JSON(http.StatusOK, res.Products)
 	})
 
 	router.GET("/products/:id", func(c *gin.Context) {
 		id := c.Param("id")
-		target := "http://inventory_service:8081/products/" + id
 
-		resp, err := http.Get(target)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := invClient.GetProductByID(ctx, &inventorypb.ProductID{Id: id})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get product by ID"})
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		defer resp.Body.Close()
 
-		c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("Content-Type"), resp.Body, nil)
+		c.JSON(http.StatusOK, res)
 	})
 
 	router.GET("/orders/:id", func(c *gin.Context) {
 		id := c.Param("id")
-		target := "http://order_service:8082/orders/" + id
 
-		resp, err := http.Get(target)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := orderClient.GetOrderById(ctx, &orderpb.OrderID{Id: id})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get order"})
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		defer resp.Body.Close()
 
-		c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("Content-Type"), resp.Body, nil)
+		c.JSON(http.StatusOK, res)
 	})
 
 	router.GET("/orders", func(c *gin.Context) {
-		resp, err := http.Get("http://order_service:8082/orders")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := orderClient.ListOrders(ctx, &orderpb.Empty{})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to reach orders"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		defer resp.Body.Close()
 
-		c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("Content-Type"), resp.Body, nil)
+		c.JSON(http.StatusOK, res.Orders)
 	})
 
 	router.POST("/orders", func(c *gin.Context) {
-		var order map[string]interface{}
-		if err := c.BindJSON(&order); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order data"})
+		var order orderpb.Order
+		if err := c.ShouldBindJSON(&order); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		resp, err := http.Post("http://order_service:8082/orders", "application/json", toJSONReader(order))
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := orderClient.CreateOrder(ctx, &order)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create order"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		defer resp.Body.Close()
 
-		c.Status(resp.StatusCode)
-		io.Copy(c.Writer, resp.Body)
+		c.JSON(http.StatusCreated, res)
 	})
 
 	router.PATCH("/orders/:id", func(c *gin.Context) {
-		target := "http://order_service:8082/orders/" + c.Param("id")
+		id := c.Param("id")
 
-		bodyBytes, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read body"})
+		var payload struct {
+			Status string `json:"status"`
+		}
+		if err := c.ShouldBindJSON(&payload); err != nil || payload.Status == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Status is required"})
 			return
 		}
 
-		req, err := http.NewRequest(http.MethodPatch, target, bytes.NewReader(bodyBytes))
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		_, err := orderClient.UpdateStatus(ctx, &orderpb.OrderStatusUpdate{
+			Id:     id,
+			Status: payload.Status,
+		})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create PATCH request"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		req.Header.Set("Content-Type", c.ContentType())
 
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to patch order"})
-			return
-		}
-		defer resp.Body.Close()
-
-		c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("Content-Type"), resp.Body, nil)
+		c.JSON(http.StatusOK, gin.H{"message": "Order status updated"})
 	})
 
 	router.POST("/products", func(c *gin.Context) {
-		var product map[string]interface{}
-		if err := c.BindJSON(&product); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product data"})
+		var req inventorypb.Product
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		resp, err := http.Post("http://inventory_service:8081/products", "application/json", toJSONReader(product))
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := invClient.CreateProduct(ctx, &req)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create product"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		defer resp.Body.Close()
 
-		c.Status(resp.StatusCode)
-		io.Copy(c.Writer, resp.Body)
+		c.JSON(http.StatusCreated, res)
 	})
 
 	router.PATCH("/products/:id", func(c *gin.Context) {
-		target := "http://inventory_service:8081/products/" + c.Param("id")
+		id := c.Param("id")
 
-		bodyBytes, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read body"})
+		var updated inventorypb.Product
+		if err := c.ShouldBindJSON(&updated); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		req, err := http.NewRequest(http.MethodPatch, target, bytes.NewReader(bodyBytes))
+		// Ensure ID in URL is used
+		updated.Id = id
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := invClient.UpdateProduct(ctx, &updated)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create PATCH request"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		req.Header.Set("Content-Type", c.ContentType())
 
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to patch product"})
-			return
-		}
-		defer resp.Body.Close()
-
-		c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("Content-Type"), resp.Body, nil)
+		c.JSON(http.StatusOK, res)
 	})
 
 	router.DELETE("/products/:id", func(c *gin.Context) {
-		target := "http://inventory_service:8081/products/" + c.Param("id")
-		req, err := http.NewRequest(http.MethodDelete, target, nil)
+		id := c.Param("id")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := invClient.DeleteProduct(ctx, &inventorypb.ProductID{Id: id})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create DELETE request"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		resp, err := http.DefaultClient.Do(req)
+		c.JSON(http.StatusOK, res)
+	})
+
+	router.GET("/categories", func(c *gin.Context) {
+		res, err := invClient.ListCategories(context.Background(), &inventorypb.Empty{})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete product"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		defer resp.Body.Close()
-		c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("Content-Type"), resp.Body, nil)
+
+		c.JSON(http.StatusOK, res.Categories)
+	})
+
+	router.POST("/categories", func(c *gin.Context) {
+		var req inventorypb.Category
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := invClient.CreateCategory(ctx, &req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, res)
+	})
+
+	router.PATCH("/categories/:id", func(c *gin.Context) {
+		idStr := c.Param("id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
+			return
+		}
+
+		var body struct {
+			Name string `json:"name"`
+		}
+		if err := c.ShouldBindJSON(&body); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := invClient.UpdateCategory(ctx, &inventorypb.UpdateCategoryRequest{
+			Id:   int32(id),
+			Name: body.Name,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, res)
+	})
+
+	router.DELETE("/categories/:id", func(c *gin.Context) {
+		idStr := c.Param("id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := invClient.DeleteCategory(ctx, &inventorypb.CategoryID{Id: int32(id)})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, res)
+	})
+
+	router.GET("/categories/:id", func(c *gin.Context) {
+		idStr := c.Param("id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := invClient.GetCategoryByID(ctx, &inventorypb.CategoryID{Id: int32(id)})
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, res)
 	})
 
 	router.Run(":8080") // Gateway listens on 8080
@@ -280,3 +396,6 @@ func toJSONReader(data interface{}) *bytes.Reader {
 	jsonBytes, _ := json.Marshal(data)
 	return bytes.NewReader(jsonBytes)
 }
+
+// Products to gRPC: GET(All and by ID, also i have grpc-products GET), DELETE, PATCH, POST
+// Orders to gRPC: GET(All and by ID),

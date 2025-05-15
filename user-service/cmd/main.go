@@ -48,7 +48,7 @@ func (r *InMemoryRepo) GetByID(id string) (*model.User, error) {
 }
 
 func main() {
-	lis, err := net.Listen("tcp", ":8083")
+	lis, err := net.Listen("tcp", ":50053")
 	if err != nil {
 		log.Fatalf("❌ Failed to listen: %v", err)
 	}

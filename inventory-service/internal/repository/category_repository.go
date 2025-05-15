@@ -10,6 +10,7 @@ type CategoryRepository interface {
 	Create(category model.Category) error
 	Update(id int, category model.Category) error
 	Delete(id int) error
+	GetByID(id int) (model.Category, error)
 }
 
 type categoryRepo struct {
@@ -52,4 +53,16 @@ func (r *categoryRepo) Update(id int, category model.Category) error {
 func (r *categoryRepo) Delete(id int) error {
 	_, err := r.db.Exec("DELETE FROM categories WHERE id=$1", id)
 	return err
+}
+
+func (r *categoryRepo) GetByID(id int) (model.Category, error) {
+	row := r.db.QueryRow("SELECT id, name FROM categories WHERE id = $1", id)
+
+	var c model.Category
+	err := row.Scan(&c.ID, &c.Name)
+	if err != nil {
+		return model.Category{}, err
+	}
+
+	return c, nil
 }

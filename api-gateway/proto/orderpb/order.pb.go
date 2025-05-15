@@ -394,14 +394,13 @@ const file_proto_order_proto_rawDesc = "" +
 	"\x11OrderStatusUpdate\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\"\a\n" +
-	"\x05Empty2\x92\x02\n" +
+	"\x05Empty2\xdd\x01\n" +
 	"\fOrderService\x121\n" +
 	"\vCreateOrder\x12\f.order.Order\x1a\x14.order.OrderResponse\x12,\n" +
 	"\fGetOrderById\x12\x0e.order.OrderID\x1a\f.order.Order\x12,\n" +
 	"\n" +
 	"ListOrders\x12\f.order.Empty\x1a\x10.order.OrderList\x12>\n" +
-	"\fUpdateStatus\x12\x18.order.OrderStatusUpdate\x1a\x14.order.OrderResponse\x123\n" +
-	"\vDeleteOrder\x12\x0e.order.OrderID\x1a\x14.order.OrderResponseB\x0fZ\rproto/orderpbb\x06proto3"
+	"\fUpdateStatus\x12\x18.order.OrderStatusUpdate\x1a\x14.order.OrderResponseB\x0fZ\rproto/orderpbb\x06proto3"
 
 var (
 	file_proto_order_proto_rawDescOnce sync.Once
@@ -432,14 +431,12 @@ var file_proto_order_proto_depIdxs = []int32{
 	2, // 3: order.OrderService.GetOrderById:input_type -> order.OrderID
 	6, // 4: order.OrderService.ListOrders:input_type -> order.Empty
 	5, // 5: order.OrderService.UpdateStatus:input_type -> order.OrderStatusUpdate
-	2, // 6: order.OrderService.DeleteOrder:input_type -> order.OrderID
-	3, // 7: order.OrderService.CreateOrder:output_type -> order.OrderResponse
-	0, // 8: order.OrderService.GetOrderById:output_type -> order.Order
-	4, // 9: order.OrderService.ListOrders:output_type -> order.OrderList
-	3, // 10: order.OrderService.UpdateStatus:output_type -> order.OrderResponse
-	3, // 11: order.OrderService.DeleteOrder:output_type -> order.OrderResponse
-	7, // [7:12] is the sub-list for method output_type
-	2, // [2:7] is the sub-list for method input_type
+	3, // 6: order.OrderService.CreateOrder:output_type -> order.OrderResponse
+	0, // 7: order.OrderService.GetOrderById:output_type -> order.Order
+	4, // 8: order.OrderService.ListOrders:output_type -> order.OrderList
+	3, // 9: order.OrderService.UpdateStatus:output_type -> order.OrderResponse
+	6, // [6:10] is the sub-list for method output_type
+	2, // [2:6] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name

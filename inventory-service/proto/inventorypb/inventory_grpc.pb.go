@@ -19,11 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	InventoryService_CreateProduct_FullMethodName  = "/inventory.InventoryService/CreateProduct"
-	InventoryService_GetProductByID_FullMethodName = "/inventory.InventoryService/GetProductByID"
-	InventoryService_ListProducts_FullMethodName   = "/inventory.InventoryService/ListProducts"
-	InventoryService_UpdateProduct_FullMethodName  = "/inventory.InventoryService/UpdateProduct"
-	InventoryService_DeleteProduct_FullMethodName  = "/inventory.InventoryService/DeleteProduct"
+	InventoryService_CreateProduct_FullMethodName   = "/inventory.InventoryService/CreateProduct"
+	InventoryService_GetProductByID_FullMethodName  = "/inventory.InventoryService/GetProductByID"
+	InventoryService_ListProducts_FullMethodName    = "/inventory.InventoryService/ListProducts"
+	InventoryService_UpdateProduct_FullMethodName   = "/inventory.InventoryService/UpdateProduct"
+	InventoryService_DeleteProduct_FullMethodName   = "/inventory.InventoryService/DeleteProduct"
+	InventoryService_ListCategories_FullMethodName  = "/inventory.InventoryService/ListCategories"
+	InventoryService_CreateCategory_FullMethodName  = "/inventory.InventoryService/CreateCategory"
+	InventoryService_UpdateCategory_FullMethodName  = "/inventory.InventoryService/UpdateCategory"
+	InventoryService_DeleteCategory_FullMethodName  = "/inventory.InventoryService/DeleteCategory"
+	InventoryService_GetCategoryByID_FullMethodName = "/inventory.InventoryService/GetCategoryByID"
 )
 
 // InventoryServiceClient is the client API for InventoryService service.
@@ -35,6 +40,11 @@ type InventoryServiceClient interface {
 	ListProducts(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ProductList, error)
 	UpdateProduct(ctx context.Context, in *Product, opts ...grpc.CallOption) (*ProductResponse, error)
 	DeleteProduct(ctx context.Context, in *ProductID, opts ...grpc.CallOption) (*ProductResponse, error)
+	ListCategories(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*CategoryList, error)
+	CreateCategory(ctx context.Context, in *Category, opts ...grpc.CallOption) (*CategoryResponse, error)
+	UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*CategoryResponse, error)
+	DeleteCategory(ctx context.Context, in *CategoryID, opts ...grpc.CallOption) (*CategoryResponse, error)
+	GetCategoryByID(ctx context.Context, in *CategoryID, opts ...grpc.CallOption) (*Category, error)
 }
 
 type inventoryServiceClient struct {
@@ -95,6 +105,56 @@ func (c *inventoryServiceClient) DeleteProduct(ctx context.Context, in *ProductI
 	return out, nil
 }
 
+func (c *inventoryServiceClient) ListCategories(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*CategoryList, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CategoryList)
+	err := c.cc.Invoke(ctx, InventoryService_ListCategories_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *inventoryServiceClient) CreateCategory(ctx context.Context, in *Category, opts ...grpc.CallOption) (*CategoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CategoryResponse)
+	err := c.cc.Invoke(ctx, InventoryService_CreateCategory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *inventoryServiceClient) UpdateCategory(ctx context.Context, in *UpdateCategoryRequest, opts ...grpc.CallOption) (*CategoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CategoryResponse)
+	err := c.cc.Invoke(ctx, InventoryService_UpdateCategory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *inventoryServiceClient) DeleteCategory(ctx context.Context, in *CategoryID, opts ...grpc.CallOption) (*CategoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CategoryResponse)
+	err := c.cc.Invoke(ctx, InventoryService_DeleteCategory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *inventoryServiceClient) GetCategoryByID(ctx context.Context, in *CategoryID, opts ...grpc.CallOption) (*Category, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Category)
+	err := c.cc.Invoke(ctx, InventoryService_GetCategoryByID_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InventoryServiceServer is the server API for InventoryService service.
 // All implementations must embed UnimplementedInventoryServiceServer
 // for forward compatibility.
@@ -104,6 +164,11 @@ type InventoryServiceServer interface {
 	ListProducts(context.Context, *Empty) (*ProductList, error)
 	UpdateProduct(context.Context, *Product) (*ProductResponse, error)
 	DeleteProduct(context.Context, *ProductID) (*ProductResponse, error)
+	ListCategories(context.Context, *Empty) (*CategoryList, error)
+	CreateCategory(context.Context, *Category) (*CategoryResponse, error)
+	UpdateCategory(context.Context, *UpdateCategoryRequest) (*CategoryResponse, error)
+	DeleteCategory(context.Context, *CategoryID) (*CategoryResponse, error)
+	GetCategoryByID(context.Context, *CategoryID) (*Category, error)
 	mustEmbedUnimplementedInventoryServiceServer()
 }
 
@@ -128,6 +193,21 @@ func (UnimplementedInventoryServiceServer) UpdateProduct(context.Context, *Produ
 }
 func (UnimplementedInventoryServiceServer) DeleteProduct(context.Context, *ProductID) (*ProductResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteProduct not implemented")
+}
+func (UnimplementedInventoryServiceServer) ListCategories(context.Context, *Empty) (*CategoryList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCategories not implemented")
+}
+func (UnimplementedInventoryServiceServer) CreateCategory(context.Context, *Category) (*CategoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCategory not implemented")
+}
+func (UnimplementedInventoryServiceServer) UpdateCategory(context.Context, *UpdateCategoryRequest) (*CategoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCategory not implemented")
+}
+func (UnimplementedInventoryServiceServer) DeleteCategory(context.Context, *CategoryID) (*CategoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteCategory not implemented")
+}
+func (UnimplementedInventoryServiceServer) GetCategoryByID(context.Context, *CategoryID) (*Category, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCategoryByID not implemented")
 }
 func (UnimplementedInventoryServiceServer) mustEmbedUnimplementedInventoryServiceServer() {}
 func (UnimplementedInventoryServiceServer) testEmbeddedByValue()                          {}
@@ -240,6 +320,96 @@ func _InventoryService_DeleteProduct_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InventoryService_ListCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).ListCategories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_ListCategories_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).ListCategories(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InventoryService_CreateCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Category)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).CreateCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_CreateCategory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).CreateCategory(ctx, req.(*Category))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InventoryService_UpdateCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCategoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).UpdateCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_UpdateCategory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).UpdateCategory(ctx, req.(*UpdateCategoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InventoryService_DeleteCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CategoryID)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).DeleteCategory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_DeleteCategory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).DeleteCategory(ctx, req.(*CategoryID))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InventoryService_GetCategoryByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CategoryID)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).GetCategoryByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_GetCategoryByID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).GetCategoryByID(ctx, req.(*CategoryID))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InventoryService_ServiceDesc is the grpc.ServiceDesc for InventoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -266,6 +436,26 @@ var InventoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteProduct",
 			Handler:    _InventoryService_DeleteProduct_Handler,
+		},
+		{
+			MethodName: "ListCategories",
+			Handler:    _InventoryService_ListCategories_Handler,
+		},
+		{
+			MethodName: "CreateCategory",
+			Handler:    _InventoryService_CreateCategory_Handler,
+		},
+		{
+			MethodName: "UpdateCategory",
+			Handler:    _InventoryService_UpdateCategory_Handler,
+		},
+		{
+			MethodName: "DeleteCategory",
+			Handler:    _InventoryService_DeleteCategory_Handler,
+		},
+		{
+			MethodName: "GetCategoryByID",
+			Handler:    _InventoryService_GetCategoryByID_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

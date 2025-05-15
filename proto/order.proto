@@ -8,6 +8,8 @@ service OrderService {
   rpc CreateOrder(Order) returns (OrderResponse);
   rpc GetOrderById(OrderID) returns (Order);
   rpc ListOrders(Empty) returns (OrderList);
+  rpc UpdateStatus(OrderStatusUpdate) returns (OrderResponse);
+  rpc DeleteOrder(OrderID) returns (OrderResponse);
 }
 
 message Order {
@@ -33,6 +35,11 @@ message OrderResponse {
 
 message OrderList {
   repeated Order orders = 1;
+}
+
+message OrderStatusUpdate {
+  string id = 1;
+  string status = 2;
 }
 
 message Empty {}

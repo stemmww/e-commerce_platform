@@ -11,7 +11,10 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
-RUN go build -o main ./cmd/main.go
+RUN go build -o order ./cmd
+
+EXPOSE 8082
+EXPOSE 50052
 
 # Run the app
-CMD ["./main"]
+CMD ["./order"]

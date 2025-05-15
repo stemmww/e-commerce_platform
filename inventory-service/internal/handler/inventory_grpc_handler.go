@@ -9,18 +9,22 @@ import (
 
 type InventoryGRPCHandler struct {
 	inventorypb.UnimplementedInventoryServiceServer
-	ProductUC usecase.ProductUsecase
+	ProductUC  usecase.ProductUsecase
+	CategoryUC usecase.CategoryUsecase
 }
 
-func NewInventoryGRPCHandler(puc usecase.ProductUsecase) *InventoryGRPCHandler {
-	return &InventoryGRPCHandler{ProductUC: puc}
+func NewInventoryGRPCHandler(puc usecase.ProductUsecase, cuc usecase.CategoryUsecase) *InventoryGRPCHandler {
+	return &InventoryGRPCHandler{
+		ProductUC:  puc,
+		CategoryUC: cuc,
+	}
 }
 
 func (h *InventoryGRPCHandler) CreateProduct(ctx context.Context, req *inventorypb.Product) (*inventorypb.ProductResponse, error) {
 	product := &model.Product{
 		ID:       req.Id,
 		Name:     req.Name,
-		Category: req.Category,
+		Category: int(req.Category),
 		Price:    float64(req.Price), // convert if needed
 		Stock:    req.Stock,
 	}
@@ -42,7 +46,7 @@ func (h *InventoryGRPCHandler) GetProductByID(ctx context.Context, req *inventor
 	return &inventorypb.Product{
 		Id:       product.ID,
 		Name:     product.Name,
-		Category: product.Category,
+		Category: int32(product.Category),
 		Price:    float32(product.Price),
 		Stock:    product.Stock,
 	}, nil
@@ -59,7 +63,7 @@ func (h *InventoryGRPCHandler) ListProducts(ctx context.Context, _ *inventorypb.
 		pbProducts = append(pbProducts, &inventorypb.Product{
 			Id:       p.ID,
 			Name:     p.Name,
-			Category: p.Category,
+			Category: int32(p.Category),
 			Price:    float32(p.Price),
 			Stock:    p.Stock,
 		})
@@ -72,7 +76,7 @@ func (h *InventoryGRPCHandler) UpdateProduct(ctx context.Context, req *inventory
 	product := &model.Product{
 		ID:       req.Id,
 		Name:     req.Name,
-		Category: req.Category,
+		Category: int(req.Category),
 		Price:    float64(req.Price),
 		Stock:    req.Stock,
 	}

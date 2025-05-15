@@ -8,9 +8,8 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o inventory ./cmd
+RUN go build -o user ./cmd
 
-EXPOSE 8081
-EXPOSE 50051
+EXPOSE 50053
 
-CMD ["./inventory"]
+CMD ["./user"]

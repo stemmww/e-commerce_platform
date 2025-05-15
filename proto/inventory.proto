@@ -9,12 +9,17 @@ service InventoryService {
   rpc ListProducts(Empty) returns (ProductList);
   rpc UpdateProduct(Product) returns (ProductResponse);
   rpc DeleteProduct(ProductID) returns (ProductResponse);
+  rpc ListCategories(Empty) returns (CategoryList);
+  rpc CreateCategory(Category) returns (CategoryResponse);
+  rpc UpdateCategory(UpdateCategoryRequest) returns (CategoryResponse);
+  rpc DeleteCategory(CategoryID) returns (CategoryResponse);
+  rpc GetCategoryByID (CategoryID) returns (Category);
 }
 
 message Product {
   string id = 1;
   string name = 2;
-  string category = 3;
+  int32 category = 3; 
   float price = 4;
   int32 stock = 5;
 }
@@ -29,6 +34,28 @@ message ProductList {
 
 message ProductResponse {
   string message = 1;
+}
+
+message Category {
+  int32 id = 1;
+  string name = 2;
+}
+
+message CategoryList {
+  repeated Category categories = 1;
+}
+
+message CategoryResponse {
+  string message = 1;
+}
+
+message UpdateCategoryRequest {
+  int32 id = 1;
+  string name = 2;
+}
+
+message CategoryID {
+  int32 id = 1;
 }
 
 message Empty {}

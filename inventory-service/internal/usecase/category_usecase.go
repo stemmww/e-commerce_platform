@@ -10,6 +10,7 @@ type CategoryUsecase interface {
 	Create(model.Category) error
 	Update(id int, category model.Category) error
 	Delete(id int) error
+	GetByID(id int) (model.Category, error)
 }
 
 type categoryUsecase struct {
@@ -34,4 +35,8 @@ func (u *categoryUsecase) Update(id int, c model.Category) error {
 
 func (u *categoryUsecase) Delete(id int) error {
 	return u.repo.Delete(id)
+}
+
+func (u *categoryUsecase) GetByID(id int) (model.Category, error) {
+	return u.repo.GetByID(id)
 }
