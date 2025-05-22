@@ -1,11 +1,10 @@
 package model
 
 type Order struct {
-	ID         int         `json:"id"`
-	UserID     int         `json:"user_id"`
-	TotalPrice float64     `json:"total_price"` // ✅ Match with proto
-	Status     string      `json:"status"`
-	Items      []OrderItem `json:"items"` // ✅ Match with proto
+	ID     int         `json:"id"`
+	UserID int         `json:"user_id"`
+	Status string      `json:"status"`
+	Items  []OrderItem `json:"items"` // ✅ Match with proto
 }
 
 type OrderItem struct {

@@ -29,10 +29,9 @@ func (h *OrderGRPCHandler) CreateOrder(ctx context.Context, req *orderpb.Order) 
 	}
 
 	order := &model.Order{
-		ID:         orderID,
-		UserID:     userID,
-		TotalPrice: float64(req.TotalPrice),
-		Status:     req.Status,
+		ID:     orderID,
+		UserID: userID,
+		Status: req.Status,
 	}
 
 	for _, item := range req.Items {
@@ -74,11 +73,10 @@ func (h *OrderGRPCHandler) GetOrderById(ctx context.Context, req *orderpb.OrderI
 	}
 
 	return &orderpb.Order{
-		Id:         strconv.Itoa(order.ID),
-		UserId:     strconv.Itoa(order.UserID),
-		TotalPrice: float32(order.TotalPrice),
-		Status:     order.Status,
-		Items:      items,
+		Id:     strconv.Itoa(order.ID),
+		UserId: strconv.Itoa(order.UserID),
+		Status: order.Status,
+		Items:  items,
 	}, nil
 }
 
@@ -99,11 +97,10 @@ func (h *OrderGRPCHandler) ListOrders(ctx context.Context, _ *orderpb.Empty) (*o
 		}
 
 		orderList = append(orderList, &orderpb.Order{
-			Id:         strconv.Itoa(o.ID),
-			UserId:     strconv.Itoa(o.UserID),
-			TotalPrice: float32(o.TotalPrice),
-			Status:     o.Status,
-			Items:      items,
+			Id:     strconv.Itoa(o.ID),
+			UserId: strconv.Itoa(o.UserID),
+			Status: o.Status,
+			Items:  items,
 		})
 	}
 

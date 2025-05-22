@@ -27,8 +27,8 @@ func (r *orderRepository) Create(order *model.Order) error {
 		return err
 	}
 
-	_, err = tx.Exec(`INSERT INTO orders (id, user_id, total_price, status) VALUES ($1, $2, $3, $4)`,
-		order.ID, order.UserID, order.TotalPrice, order.Status)
+	_, err = tx.Exec(`INSERT INTO orders (id, user_id, status) VALUES ($1, $2, $3)`,
+		order.ID, order.UserID, order.Status)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -47,7 +47,7 @@ func (r *orderRepository) Create(order *model.Order) error {
 }
 
 func (r *orderRepository) GetAll() ([]model.Order, error) {
-	rows, err := r.db.Query(`SELECT id, user_id, total_price, status FROM orders`)
+	rows, err := r.db.Query(`SELECT id, user_id, status FROM orders`)
 
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (r *orderRepository) GetAll() ([]model.Order, error) {
 	var orders []model.Order
 	for rows.Next() {
 		var o model.Order
-		if err := rows.Scan(&o.ID, &o.UserID, &o.TotalPrice, &o.Status); err != nil {
+		if err := rows.Scan(&o.ID, &o.UserID, &o.Status); err != nil {
 			return nil, err
 		}
 
@@ -84,9 +84,9 @@ func (r *orderRepository) GetAll() ([]model.Order, error) {
 }
 
 func (r *orderRepository) GetByID(id int) (*model.Order, error) {
-	row := r.db.QueryRow(`SELECT id, user_id, total_price, status FROM orders WHERE id = $1`, id)
+	row := r.db.QueryRow(`SELECT id, user_id, status FROM orders WHERE id = $1`, id)
 	var o model.Order
-	if err := row.Scan(&o.ID, &o.UserID, &o.TotalPrice, &o.Status); err != nil {
+	if err := row.Scan(&o.ID, &o.UserID, &o.Status); err != nil {
 		return nil, err
 	}
 
